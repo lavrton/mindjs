@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+    <head>
+        <meta charset="utf-8">
+        <title>Example 1 - Load and visualize 100 atoms</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!--<script type="text/javascript" src="../bower_components/underscore/underscore.js"></script>-->
+        <!--<script type="text/javascript" src="../bower_components/backbone/backbone.js"></script>-->
+        <!--<script type="text/javascript" src="../bower_components/hammerjs/hammer.js"></script>-->
+        <!--<script type="text/javascript" src="../bower_components/fpsmeter/dist/fpsmeter.js"></script>-->
+        <script type="text/javascript" src="../dist/mind.js"></script>
+        <style>
+            body {
+                margin : 0;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script type="text/javascript">
+            var stage = new Mind.Stage({
+                container : 'container',
+                width : window.innerWidth,
+                height : window.innerHeight
+            });
+//            var wspace = new Mapper.Workspace({
+//                container : 'container',
+//                width : window.innerWidth,
+//                height : window.innerHeight
+//            });
+//            wspace.background = 'img/repeat1.png';
+//
+//            var o, x, y;
+//            for (x = 0; x < 100; x++) {
+//                for (y = 0; y < 100; y++) {
+//                    o = new Mapper.Atom({
+//                        x : x * 100,
+//                        y : y * 100
+//                    });
+//                    wspace.addAtom(o);
+//                }
+//            }
+//
+//            var meter = new FPSMeter();
+//
+//            (function tick() {
+//                meter.tick();
+//                requestAnimationFrame(tick);
+//            })();
+
+        </script>
+    </body>
+</html>

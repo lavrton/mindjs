@@ -1,0 +1,19 @@
+{
+  "name": "mapper",
+  "version": "0.0.1",
+  "authors": [
+    "Lavrenov Anton <lavrton@gmail.com>"
+  ],
+  "main": "dist/mapper.js",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "hammerjs": "~2.0.4"
+  }
+}
