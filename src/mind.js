@@ -16,9 +16,11 @@
         root.Mind = factory();
     }
 })(this, function factory() {
-    var Stage = require('./Stage');
+    var Stage = require('./stage');
+    var Atom = require('./atom');
     var Mind = {
-        Stage : Stage
+        Stage : Stage,
+        Atom : Atom
     }
     return Mind;
 });

@@ -1,10 +1,9 @@
+"use strict";
 var gulp = require("gulp");
-var concat = require('gulp-concat');
-var connect = require('gulp-connect');
-//var sourcemaps = require('gulp-sourcemaps');
-var livereload = require('gulp-livereload');
-var browserify = require('gulp-browserify');
 var gutil = require('gulp-util');
+var browserify = require('gulp-browserify');
+var connect = require('gulp-connect');
+var livereload = require('gulp-livereload');
 
 gulp.task('connect', function () {
     connect.server({
@@ -18,8 +17,7 @@ gulp.task('connect', function () {
 gulp.task('scripts', function() {
     gulp.src('src/mind.js')
         .pipe(browserify({
-            debug : true,
-            transform : ['6to5ify']
+            debug : true
         }).on('error', gutil.log))
         .pipe(gulp.dest('./dist/'))
         .pipe(livereload());
