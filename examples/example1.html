@@ -1,17 +1,26 @@
 <!DOCTYPE html>
+<html>
     <head>
         <meta charset="utf-8">
         <title>Example 1 - Load and visualize 100 atoms</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!--<script type="text/javascript" src="../bower_components/underscore/underscore.js"></script>-->
         <!--<script type="text/javascript" src="../bower_components/backbone/backbone.js"></script>-->
+
+        <script type="text/javascript" src="./libs/fpsmeter.min.js"></script>
+
         <script type="text/javascript" src="../bower_components/hammerjs/hammer.js"></script>
-        <!--<script type="text/javascript" src="../bower_components/fpsmeter/dist/fpsmeter.js"></script>-->
         <script type="text/javascript" src="../dist/mind.js"></script>
         <style>
             body {
                 margin : 0;
                 overflow: hidden;
+            }
+
+            .node {
+                background-color : #3fa9f5;
+                padding : 10px;
+                border-radius : 1000px;
             }
         </style>
     </head>
@@ -23,25 +32,23 @@
                 width : window.innerWidth,
                 height : window.innerHeight
             });
-//            wspace.background = 'img/repeat1.png';
-//
+
             var o, x, y;
             for (x = 0; x < 100; x++) {
                 for (y = 0; y < 100; y++) {
-                    o = new Mind.Atom({
+                    o = new Mind.Node({
                         x : x * 100,
                         y : y * 100
                     });
                     stage.addAtom(o);
                 }
             }
-//
-//            var meter = new FPSMeter();
-//
-//            (function tick() {
-//                meter.tick();
-//                requestAnimationFrame(tick);
-//            })();
+
+            var meter = new FPSMeter();
+            (function tick() {
+                meter.tick();
+                requestAnimationFrame(tick);
+            })();
 
         </script>
     </body>

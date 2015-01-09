@@ -10,29 +10,41 @@ function Stage(params) {
         utils.throw('container parameter is required.');
     }
     this.atoms = [];
-    this._container = document.getElementById(params.container);
-
-    this._container.style.width = params.width + 'px';
-    this._container.style.height = params.height + 'px';
-
-    this.width = params.width;
-    this.height = params.height;
     this.camera = new Camera();
-
-    this._initBackground();
-    this._initAtomContainer();
+    this.height = params.height || 300;
+    this.width = params.width || 300;
+    this._setupElements(params.container);
     this._setupDragCamera();
     this._setupAtomDrag();
     this._setupKeyboard();
 }
 
+Stage.prototype._setupElements = function(container) {
+    this._container = document.getElementById(container);
+    if (!this._container) {
+        utils.throw('can not find container with id ' + container);
+    }
+    this._container.style.width = this.width + 'px';
+    this._container.style.height = this.height + 'px';
+
+    // first background
+    this._initBackground();
+    // and atoms on top
+    this._initAtomContainer();
+};
 Stage.prototype._setupAtomDrag = function() {
     var mc = new Hammer.Manager(this._container);
 
     mc.add(new Hammer.Pan({ threshold: 0, pointers: 0 }));
 
-    var dragElement;
+    var dragElement, offset;
     mc.on("panstart", function(e) {
+        if (e.target._atom) {
+            offset = {
+                x : e.target._atom.x - e.changedPointers[0].clientX,
+                y : e.target._atom.y - e.changedPointers[0].clientY
+            };
+        }
         dragElement = e.target;
     });
     mc.on("panmove", function (e) {
@@ -40,8 +52,9 @@ Stage.prototype._setupAtomDrag = function() {
         if (!atom) {
             return;
         }
-        atom.x = e.changedPointers[0].clientX + this.camera.x;
-        atom.y = e.changedPointers[0].clientY  + this.camera.y;
+        var pointer = e.changedPointers[0];
+        atom.x = pointer.clientX + this.camera.x + offset.x;
+        atom.y = pointer.clientY  + this.camera.y + offset.y;
         atom._positioning();
     }.bind(this));
 };
@@ -56,41 +69,15 @@ Stage.prototype.addAtom = function(o) {
 Stage.prototype._isAtomVisible = function(atom) {
     var cameraX = this.camera.x;
     var cameraY = this.camera.y;
-    var screenWidth = this.width;
-    var screenHeight = this.height;
-    if (atom.x > cameraX - screenWidth  && atom.x < cameraX + screenWidth * 2 &&
-        atom.y > cameraY - screenHeight && atom.y < cameraY + screenHeight * 2) {
-        return true;
-    }
-    return false;
-};
+    var screenWidth = this._container.offsetWidth;
+    var screenHeight = this._container.offsetHeight;
+    return !!(
+        atom.x > cameraX - screenWidth &&
+        atom.x < cameraX + screenWidth * 2 &&
+        atom.y > cameraY - screenHeight &&
+        atom.y < cameraY + screenHeight * 2
+    );
 
-//set background(background) {
-//    if (background.indexOf('/') !== -1) {
-//        this._back.style['background-image'] = 'url("' + background + '")';
-//        this._back.style['background-color'] = '';
-//    } else {
-//        this._back.style['background-image'] = '';
-//        this._back.style['background-color'] = background;
-//    }
-//}
-//
-//hide() {
-//    this._container.style.display = 'none';
-//}
-//
-//show() {
-//    this._container.style.display = '';
-//}
-
-Stage.prototype.setSize = function(param) {
-    //this._stage.setWidth(param.width);
-    //this._stage.setHeight(param.height);
-    //this._back.width(param.width);
-    //this._back.height(param.height);
-    //this.camera.trigger('change');
-    //this.camera.trigger('change:scale');
-    //this._backLayer.draw();
 };
 
 Stage.prototype._positionBack = function() {
