@@ -9,14 +9,51 @@ function Stage(params) {
     if (!params.container) {
         utils.throw('container parameter is required.');
     }
-    this.atoms = [];
+    this.nodes = [];
+    this.connectors = [];
     this.camera = new Camera();
     this.height = params.height || 300;
     this.width = params.width || 300;
     this._setupElements(params.container);
+    this._updateSize();
     this._setupDragCamera();
-    this._setupAtomDrag();
+    this._setupNodeDrag();
     this._setupKeyboard();
+}
+
+var p = Stage.prototype;
+
+p.addNode = function(o) {
+    this.nodes.push(o);
+    if (this._isNodeVisible(o)) {
+        this._nodeContainer.appendChild(o.el);
+        o._updateAttrs();
+        o._positioning();
+    }
+};
+
+p.addConnector = function(o) {
+    this.connectors.push(o);
+    if (true) {
+        this._connectorContainer.appendChild(o.el);
+    }
+};
+
+p.setSize = function(params) {
+    this.width = params.width;
+    this.height = params.height;
+    this._updateSize();   
+};
+
+p.checkVisibility = function() {
+    this._requestCheckVisiability();
+}
+
+p._updateSize = function() {
+    this._container.style.width = this.width + 'px';
+    this._container.style.height = this.height + 'px';
+    this._back.style.width = this.width + 'px';
+    this._back.style.height = this.height + 'px';
 }
 
 Stage.prototype._setupElements = function(container) {
@@ -24,58 +61,68 @@ Stage.prototype._setupElements = function(container) {
     if (!this._container) {
         utils.throw('can not find container with id ' + container);
     }
-    this._container.style.width = this.width + 'px';
-    this._container.style.height = this.height + 'px';
+    this._container.style.overflow = "hidden";
 
     // first background
     this._initBackground();
-    // and atoms on top
-    this._initAtomContainer();
+    // then connectors
+    this._initConnectorsContainer();
+    // and nodes on top
+    this._initNodeContainer();
 };
-Stage.prototype._setupAtomDrag = function() {
+Stage.prototype._setupNodeDrag = function() {
     var mc = new Hammer.Manager(this._container);
 
     mc.add(new Hammer.Pan({ threshold: 0, pointers: 0 }));
 
     var dragElement, offset;
     mc.on("panstart", function(e) {
-        if (e.target._atom) {
+        if (e.target._node) {
+            var localPos = this._g2l(e.target._node);
             offset = {
-                x : e.target._atom.x - e.changedPointers[0].clientX,
-                y : e.target._atom.y - e.changedPointers[0].clientY
+                x : localPos.x - e.changedPointers[0].clientX,
+                y : localPos.y - e.changedPointers[0].clientY
             };
         }
         dragElement = e.target;
-    });
+    }.bind(this));
     mc.on("panmove", function (e) {
-        var atom = dragElement._atom;
-        if (!atom) {
+        var node = dragElement._node;
+        if (!node) {
             return;
         }
         var pointer = e.changedPointers[0];
-        atom.x = pointer.clientX + this.camera.x + offset.x;
-        atom.y = pointer.clientY  + this.camera.y + offset.y;
-        atom._positioning();
+        var localPos = {
+            x :  pointer.clientX + offset.x,
+            y : pointer.clientY + offset.y
+        };
+        var globalPos = this._l2g(localPos);
+        node.setPosition(globalPos);
     }.bind(this));
 };
 
-Stage.prototype.addAtom = function(o) {
-    this.atoms.push(o);
-    if (this._isAtomVisible(o)) {
-        this._atomContainer.appendChild(o.node);
-    }
+Stage.prototype._l2g = function(lP) {
+    return {
+        x: (lP.x + this.camera.x * this.camera.scale - this.width / 2) / this.camera.scale,
+        y: (lP.y + this.camera.y * this.camera.scale - this.height / 2) / this.camera.scale
+    };
 };
 
-Stage.prototype._isAtomVisible = function(atom) {
+Stage.prototype._g2l = function(gP) {
+    return {
+        x: gP.x * this.camera.scale - this.camera.x * this.camera.scale + this.width / 2,
+        y: gP.y * this.camera.scale - this.camera.y * this.camera.scale + this.height / 2
+    };
+};
+
+Stage.prototype._isNodeVisible = function(node) {
     var cameraX = this.camera.x;
     var cameraY = this.camera.y;
-    var screenWidth = this._container.offsetWidth;
-    var screenHeight = this._container.offsetHeight;
     return !!(
-        atom.x > cameraX - screenWidth &&
-        atom.x < cameraX + screenWidth * 2 &&
-        atom.y > cameraY - screenHeight &&
-        atom.y < cameraY + screenHeight * 2
+        node.x > cameraX - this.width &&
+        node.x < cameraX + this.width &&
+        node.y > cameraY - this.height &&
+        node.y < cameraY + this.height
     );
 
 };
@@ -87,51 +134,69 @@ Stage.prototype._positionBack = function() {
 Stage.prototype._initBackground = function() {
     this._back = document.createElement('div');
     this._container.appendChild(this._back);
-    this._back.style.position = 'absolute';
+    this._back.style.position = 'fixed';
     this._back.style.transform = 'translateZ(-1)';
     this._back.style['-webkit-transform'] = 'translateZ(-1)';
-    this._back.style.width = '100%';
-    this._back.style.height = '100%';
     this._positionBack();
 };
 
-Stage.prototype._positionAtomContainer = function() {
-    this._atomContainer.style.transform = 'translateX(' + -this.camera.x + 'px) translateY(' + -this.camera.y + 'px)';
-    this._atomContainer.style['-webkit-transform'] = 'translateX(' + -this.camera.x + 'px) translateY(' + -this.camera.y + 'px)';
+Stage.prototype._positionNodeContainer = function() {
+    this._nodeContainer.style.transform = 'translateX(' + parseInt(-this.camera.x + this.width / 2 )+ 'px) translateY(' + parseInt(-this.camera.y + this.height / 2) + 'px)';
+    this._nodeContainer.style['-webkit-transform'] = 'translateX(' + parseInt(-this.camera.x + this.width / 2) + 'px) translateY(' + parseInt(-this.camera.y + this.height / 2) + 'px)';
 };
 
-Stage.prototype._initAtomContainer = function() {
-    this._atomContainer = document.createElement('div');
-    this._container.appendChild(this._atomContainer);
-    this._atomContainer.style.position = 'absolute';
-    this._atomContainer.style.transform = 'translateZ(-1)';
-    this._atomContainer.style['-webkit-transform'] = 'translateZ(-1)';
-    this._positionAtomContainer();
+Stage.prototype._positionConnectorContainer = function() {
+    this._connectorContainer.style.transform = 'translateX(' + parseInt(-this.camera.x + this.width / 2 )+ 'px) translateY(' + parseInt(-this.camera.y + this.height / 2) + 'px)';
+    this._connectorContainer.style['-webkit-transform'] = 'translateX(' + parseInt(-this.camera.x + this.width / 2) + 'px) translateY(' + parseInt(-this.camera.y + this.height / 2) + 'px)';
 };
 
+Stage.prototype._initNodeContainer = function() {
+    this._nodeContainer = document.createElement('div');
+    this._container.appendChild(this._nodeContainer);
+    this._nodeContainer.style.transform = 'translateZ(-1)';
+    this._nodeContainer.style['-webkit-transform'] = 'translateZ(-1)';
+    this._positionNodeContainer();
+};
+
+Stage.prototype._initConnectorsContainer = function() {
+    this._connectorContainer = document.createElement('div');
+    this._container.appendChild(this._connectorContainer);
+    this._connectorContainer.style.transform = 'translateZ(-1)';
+    this._connectorContainer.style['-webkit-transform'] = 'translateZ(-1)';
+    this._positionConnectorContainer();
+};
 
 Stage.prototype._setupDragCamera = function() {
-    var mc = new Hammer.Manager(this._back);
+    this._setupDragStageOnEl(this._back);
+    this._setupDragStageOnEl(this._connectorContainer);
+};
+Stage.prototype._setupDragStageOnEl = function(el) {
+    var mc = new Hammer.Manager(el);
 
     mc.add(new Hammer.Pan({ threshold: 0, pointers: 0 }));
     var previous = {};
     mc.on("panstart", function(e) {
-        previous = e.center;
+        previous = {
+            x : e.pointers[0].clientX,
+            y : e.pointers[0].clientY
+        };
     });
     mc.on("panmove", function(e) {
         var newPos = {
-            x : e.center.x + e.deltaX,
-            y : e.center.y + e.deltaY
+            x : e.pointers[0].clientX,
+            y : e.pointers[0].clientY
         };
         var dx = previous.x - newPos.x;
         var dy = previous.y - newPos.y;
         this.camera.move(dx, dy);
         this._positionBack();
-        this._positionAtomContainer();
+        this._positionNodeContainer();
+        this._positionConnectorContainer();
         this._requestCheckVisiability();
         previous = newPos;
     }.bind(this));
 };
+
 
 Stage.prototype._requestCheckVisiability = function() {
     if (this._checkVisibilityWaiting) {
@@ -139,12 +204,12 @@ Stage.prototype._requestCheckVisiability = function() {
     }
     this._checkVisibilityWaiting = true;
     setTimeout(function() {
-        this.atoms.forEach(function(atom) {
-            var visible = this._isAtomVisible(atom);
-            if (visible && !atom.node.parentElement) {
-                this._atomContainer.appendChild(atom.node);
-            } else if (!visible && atom.node.parentElement) {
-                atom.node.parentElement.removeChild(atom.node);
+        this.nodes.forEach(function(node) {
+            var visible = this._isNodeVisible(node);
+            if (visible && !node.el.parentElement) {
+                this._nodeContainer.appendChild(node.el);
+            } else if (!visible && node.el.parentElement) {
+                node.el.parentElement.removeChild(node.el);
             }
         }.bind(this));
         this._checkVisibilityWaiting = false;
@@ -165,7 +230,7 @@ Stage.prototype._setupKeyboard = function() {
         if (e.keyCode === 40) {
             this.camera.y += 3;
         }
-    };
+    }.bind(this);
 };
 
 module.exports = Stage;

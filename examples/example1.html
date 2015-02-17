@@ -15,6 +15,15 @@
             body {
                 margin : 0;
                 overflow: hidden;
+                width:100%;
+                height: 100%;
+                /*text-align: center;*/
+            }
+
+            #container {
+                border: 1px solid;
+                margin-left: auto ;
+  margin-right: auto ;
             }
 
             .node {
@@ -29,19 +38,28 @@
         <script type="text/javascript">
             var stage = new Mind.Stage({
                 container : 'container',
-                width : window.innerWidth,
-                height : window.innerHeight
+                width : window.innerWidth - 100,
+                height : window.innerHeight - 50
             });
 
             var o, x, y;
-            for (x = 0; x < 100; x++) {
-                for (y = 0; y < 100; y++) {
+            for (x = -5; x < 5; x++) {
+                for (y = -5; y < 5; y++) {
                     o = new Mind.Node({
                         x : x * 100,
                         y : y * 100
                     });
-                    stage.addAtom(o);
+                    stage.addNode(o);
                 }
+            }
+
+            for (x = 0; x < 10; x++) {
+                var atom1 = stage.nodes[Math.floor(stage.nodes.length * Math.random())];
+                var atom2 = stage.nodes[Math.floor(stage.nodes.length * Math.random())]
+                o = new Mind.Connector({
+                    atoms : [atom1, atom2]
+                });
+                stage.addConnector(o);
             }
 
             var meter = new FPSMeter();
